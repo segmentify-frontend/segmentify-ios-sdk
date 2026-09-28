@@ -53,6 +53,7 @@ public class SegmentifyManager : NSObject {
     static let impressionStep = "impression"
     static let widgetViewStep = "widget-view"
     static let clickStep = "click"
+    static let pushStep = "push"
     static let searchStep = "search"
     static let startIndex = 0
     
@@ -1022,9 +1023,9 @@ public class SegmentifyManager : NSObject {
             
             let model  = InteractionModel()
             model.instanceId = instanceId
-            model.interactionId = instanceId
+            model.interactionId = segmentifyObject.interactionId ?? instanceId
 
-            sendClick(segmentifyObject: model)
+            sendPushClick(segmentifyObject: model)
         }
 
         let encodedData = try? JSONEncoder().encode(segmentifyObject)
@@ -1841,9 +1842,21 @@ public class SegmentifyManager : NSObject {
         eventRequest.userOperationStep = SegmentifyManager.widgetViewStep
     }
     
-    func sendClick(segmentifyObject : InteractionModel) {
+    func sendPushClick(segmentifyObject : InteractionModel) {
         eventRequest.eventName = SegmentifyManager.interactionEventName
-        eventRequest.userOperationStep = SegmentifyManager.clickStep
+        eventRequest.type = SegmentifyManager.pushStep
+        eventRequest.instanceId = segmentifyObject.instanceId
+        eventRequest.interactionId = segmentifyObject.interactionId
+
+        if UserDefaults.standard.object(forKey: "UserSentUserId") != nil {
+            eventRequest.userID = UserDefaults.standard.object(forKey: "UserSentUserId") as? String
+        } else {
+            if UserDefaults.standard.object(forKey: "SEGMENTIFY_USER_ID") != nil {
+                self.eventRequest.userID = UserDefaults.standard.object(forKey: "SEGMENTIFY_USER_ID") as? String
+            }
+        }
+
+        setIDAndSendEvent()
     }
     
     //Alternative Events
